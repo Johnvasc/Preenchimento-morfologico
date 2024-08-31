@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing App</title>
+    <script src="/methods.js"></script>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas{
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    <script>
+        let m = new methods();
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+
+        var image = [];
+        for (let i = 0; i < 600; i++) {
+            image[i] = [];
+            for (let j = 0; j < 800; j++) {
+                image[i][j] = 255;
+            }
+        }
+
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', draw);
+        
+        function startDrawing(e) {
+            drawing = true;
+            lastX = e.clientX - canvas.offsetLeft;
+            lastY = e.clientY - canvas.offsetTop;
+            draw(e); // Para começar a desenhar imediatamente
+        }
+        function stopDrawing(){
+            drawing = false;
+            ctx.beginPath();
+        }
+        function draw(e){
+            if (!drawing) return;
+
+            // Obter coordenadas do mouse
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
+
+            // Desenhar no canvas
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+
+            // Preencher os pixels ao longo da linha desenhada na matriz image
+            const points = getLinePoints(lastX, lastY, x, y);
+            points.forEach(([px, py]) => {
+                const radius = Math.floor(ctx.lineWidth / 2);
+                for (let dy = -radius; dy <= radius; dy++) {
+                    for (let dx = -radius; dx <= radius; dx++) {
+                        const nx = Math.floor(px + dx);
+                        const ny = Math.floor(py + dy);
+                        if (ny >= 0 && ny < 600 && nx >= 0 && nx < 800) {
+                            image[ny][nx] = 0; // Atualiza a célula na matriz
+                        }
+                    }
+                }
+            });
+
+            lastX = x;
+            lastY = y;
+        }
+        function getLinePoints(x0, y0, x1, y1) {
+            const points = [];
+            const dx = Math.abs(x1 - x0);
+            const dy = Math.abs(y1 - y0);
+            const sx = (x0 < x1) ? 1 : -1;
+            const sy = (y0 < y1) ? 1 : -1;
+            let err = dx - dy;
+
+            while (true) {
+                points.push([x0, y0]);
+                if (x0 === x1 && y0 === y1) break;
+                const e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x0 += sx; }
+                if (e2 < dx) { err += dx; y0 += sy; }
+            }
+
+            return points;
+        }
+        function printImageMatrix() {
+            console.table(image);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                printImageMatrix();
+            }
+        });
+        function renderImageFromMatrix(image) {
+            for (let i = 0; i < image.length; i++) {
+                for (let j = 0; j < image[i].length; j++) {
+                    const value = image[i][j];
+                    ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+                    ctx.fillRect(j, i, 1, 1);
+                }
+            }
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                renderImageFromMatrix(image);
+            }
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'z' || e.key === 'Z') {
+                let x = Math.floor(mouseX);
+                let y = Math.floor(mouseY);
+                let currentColor = image[y][x];
+                console.log(x, y, currentColor)
+                let preenchida = m.preencherBuracos(image, x, y);
+                image = preenchida;
+            }
+        });
+    </script>
+</body>
+</html>

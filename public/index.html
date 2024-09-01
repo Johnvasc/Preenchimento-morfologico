@@ -137,9 +137,11 @@
                 let x = Math.floor(mouseX);
                 let y = Math.floor(mouseY);
                 let currentColor = image[y][x];
+                if(currentColor==0) return;
                 console.log(x, y, currentColor)
-                let preenchida = m.preencherBuracos(image, x, y);
+                let preenchida = m.preencherBuracos(image, y, x);
                 image = preenchida;
+                renderImageFromMatrix(image);
             }
         });
     </script>

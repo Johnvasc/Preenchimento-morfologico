@@ -1,10 +1,8 @@
 class methods {
-    // Função para calcular o complemento da matriz
     complemento(matriz) {
         return matriz.map(row => row.map(value => value === 255 ? 0 : 255));
     }
 
-    // Função para calcular a interseção morfológica entre duas matrizes
     intersecao(matrizA, matrizB) {
         if (matrizA.length !== matrizB.length || matrizA[0].length !== matrizB[0].length) {
             throw new Error("As matrizes devem ter o mesmo tamanho para calcular a interseção.");
@@ -23,11 +21,11 @@ class methods {
         let padX = Math.floor(eWidth / 2);
         let dilatado = [];
     
-        // Inicializar a matriz dilatada com brancos
+        // vai gerar a matriz de brancos
         for(let i = 0; i < height; i++) {
             dilatado[i] = [];
             for(let j = 0; j < width; j++) {
-                dilatado[i][j] = 255; // Inicialmente tudo é branco
+                dilatado[i][j] = 255;
             }
         }
     
@@ -52,11 +50,7 @@ class methods {
         return dilatado;
     }
     
-    
-
-    // Função para preencher buracos na matriz
     preencherBuracos(matrix, x, y) {
-        // Passo 1: Calcular o complemento da matrix
         let complementomatrix = this.complemento(matrix);
         let height = matrix.length;
         let width = matrix[0].length;
@@ -68,7 +62,6 @@ class methods {
                 if(i === x && j === y) wMatrix[i][j] = 0;
             }
         }
-        // Passo 2: Dilatar o complemento
         let m2 = wMatrix;
         const elementoEstruturante = [
             [0, 1, 0],
@@ -82,19 +75,17 @@ class methods {
         do {
             dilatado = this.dilate(m2, elementoEstruturante);
             intersecao = this.intersecao(dilatado, complementomatrix);
-            if (intersecao === i2) break;
             i2 = intersecao;
             m2 = intersecao;
             o++
+            if(o%100==0) console.log(o/10 + '%');
         } while (o<1000);
-        // Passo 3: Interseção da dilatação com o complemento
-        // Passo 4: Unir a interseção com a imagem original para preencher os buracos
         for(let i=0; i<height; i++){
             for(let j=0; j<width; j++){
                 if(m2[i][j] == 0) matrix[i][j] = 0;
             }
         }
-    
+        console.log('terminado!');
         return matrix;
     }
 }
